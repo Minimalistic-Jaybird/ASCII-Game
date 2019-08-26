@@ -4,12 +4,39 @@ from game_messages import Message
 
 
 class Fighter:
-    def __init__(self, hp, defense, power, xp=0):
-        self.max_hp = hp
+    def __init__(self, hp, defence, power, xp=0):
+        self.base_max_hp = hp
         self.hp = hp
-        self.defense = defense
-        self.power = power
+        self.base_defence = defence
+        self.base_power = power
         self.xp = xp
+
+    @property
+    def max_hp(self):
+        if self.owner and self.owner.equipment:
+            bonus = self.owner.equipment.max_hp_bonus
+        else:
+            bonus = 0
+
+        return self.base_max_hp + bonus
+
+    @property
+    def power(self):
+        if self.owner and self.owner.equipment:
+            bonus = self.owner.equipment.power_bonus
+        else:
+            bonus = 0
+
+        return self.base_power + bonus
+
+    @property
+    def defence(self):
+        if self.owner and self.owner.equipment:
+            bonus = self.owner.equipment.defence_bonus
+        else:
+            bonus = 0
+
+        return self.base_defence + bonus
 
     def take_damage(self, amount):
         results = []
@@ -30,7 +57,7 @@ class Fighter:
     def attack(self, target):
         results = []
 
-        damage = self.power - target.fighter.defense
+        damage = self.power - target.fighter.defence
 
         if damage > 0:
             results.append({'message': Message('{0} attacks {1} for {2} hit points.'.format(

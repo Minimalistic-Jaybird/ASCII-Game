@@ -2,6 +2,8 @@ import tcod as libtcod
 from random import randint
 
 from components.ai import BasicMonster
+from components.equipment import EquipmentSlots
+from components.equippable import Equippable
 from components.fighter import Fighter
 from components.item import Item
 from components.stairs import Stairs
@@ -131,9 +133,15 @@ class GameMap:
         }
 
         item_chances = {
-            'healing_potion': 35,
-            'lightning_scroll': from_dungeon_level([[25, 4]], self.dungeon_level),
-            'fireball_scroll': from_dungeon_level([[25, 6]], self.dungeon_level),
+            'minor_healing_potion': 25,
+            'healing_potion': from_dungeon_level([[10, 3], [15, 4], [20, 6]], self.dungeon_level),
+            'sword': from_dungeon_level([[5, 4]], self.dungeon_level),
+            'shield': from_dungeon_level([[10, 8]], self.dungeon_level),
+            'defender': from_dungeon_level([[5, 10]], self.dungeon_level),
+            'armor': from_dungeon_level([[10, 4]], self.dungeon_level),
+            'amulet_of_vitality': from_dungeon_level([[5, 10]], self.dungeon_level),
+            'lightning_scroll': from_dungeon_level([[15, 4]], self.dungeon_level),
+            'fireball_scroll': from_dungeon_level([[15, 6]], self.dungeon_level),
             'confusion_scroll': from_dungeon_level([[10, 2]], self.dungeon_level)
         }
 
@@ -147,13 +155,13 @@ class GameMap:
                 monster_choice = random_choice_from_dict(monster_chances)
 
                 if monster_choice == 'orc':
-                    fighter_component = Fighter(hp=20, defense=0, power=4, xp=35)
+                    fighter_component = Fighter(hp=20, defence=0, power=4, xp=35)
                     ai_component = BasicMonster()
 
                     monster = Entity(x, y, 'O', libtcod.desaturated_green, 'Orc', blocks=True,
                                      render_order=RenderOrder.ACTOR, fighter=fighter_component, ai=ai_component)
                 else:
-                    fighter_component = Fighter(hp=30, defense=2, power=8, xp=100)
+                    fighter_component = Fighter(hp=30, defence=2, power=8, xp=100)
                     ai_component = BasicMonster()
 
                     monster = Entity(x, y, 'T', libtcod.darker_green, 'Troll', blocks=True, fighter=fighter_component,
@@ -168,24 +176,43 @@ class GameMap:
             if not any([entity for entity in entities if entity.x == x and entity.y == y]):
                 item_choice = random_choice_from_dict(item_chances)
 
-                if item_choice == 'healing_potion':
-                    item_component = Item(use_function=heal, amount=40)
-                    item = Entity(x, y, '!', libtcod.violet, 'Healing Potion', render_order=RenderOrder.ITEM,
+                if item_choice == 'minor_healing_potion':
+                    item_component = Item(use_function=heal, amount=20)
+                    item = Entity(x, y, '!', libtcod.red, 'Minor Healing Potion', render_order=RenderOrder.ITEM,
                                   item=item_component)
+                elif item_choice == 'healing_potion':
+                    item_component = Item(use_function=heal, amount=40)
+                    item = Entity(x, y, '!', libtcod.dark_red, 'Healing Potion', render_order=RenderOrder.ITEM,
+                                  item=item_component)
+                elif item_choice == 'sword':
+                    equippable_component = Equippable(EquipmentSlots.MAIN_HAND, power_bonus=3)
+                    item = Entity(x, y, '/', libtcod.sky, 'Sword', equippable=equippable_component)
+                elif item_choice == 'shield':
+                    equippable_component = Equippable(EquipmentSlots.OFF_HAND, defence_bonus=1)
+                    item = Entity(x, y, ')', libtcod.darker_orange, 'Shield', equippable=equippable_component)
+                elif item_choice == 'defender':
+                    equippable_component = Equippable(EquipmentSlots.OFF_HAND, power_bonus=2)
+                    item = Entity(x, y, '|', libtcod.azure, 'Defender', equippable=equippable_component)
+                elif item_choice == 'armor':
+                    equippable_component = Equippable(EquipmentSlots.BODY, defence_bonus=3)
+                    item = Entity(x, y, '[', libtcod.sky, 'Armor', equippable=equippable_component)
+                elif item_choice == 'amulet_of_vitality':
+                    equippable_component = Equippable(EquipmentSlots.NECK, max_hp_bonus=20)
+                    item = Entity(x, y, '"', libtcod.sky, 'Amulet of Vitality', equippable=equippable_component)
                 elif item_choice == 'fireball_scroll':
                     item_component = Item(use_function=cast_fireball, targeting=True, targeting_message=Message(
                         'Left-click a target tile for the fireball, or right-click to cancel.', libtcod.light_cyan),
                                           damage=25, radius=3)
-                    item = Entity(x, y, '#', libtcod.red, 'Fireball Scroll', render_order=RenderOrder.ITEM,
+                    item = Entity(x, y, '?', libtcod.red, 'Fireball Scroll', render_order=RenderOrder.ITEM,
                                   item=item_component)
                 elif item_choice == 'confusion_scroll':
                     item_component = Item(use_function=cast_confuse, targeting=True, targeting_message=Message(
                         'Left-click an enemy to confuse it, or right-click to cancel.', libtcod.light_cyan))
-                    item = Entity(x, y, '#', libtcod.light_pink, 'Confusion Scroll', render_order=RenderOrder.ITEM,
+                    item = Entity(x, y, '?', libtcod.light_pink, 'Confusion Scroll', render_order=RenderOrder.ITEM,
                                   item=item_component)
                 else:
                     item_component = Item(use_function=cast_lightning, damage=40, maximum_range=5)
-                    item = Entity(x, y, '#', libtcod.yellow, 'Lightning Scroll', render_order=RenderOrder.ITEM,
+                    item = Entity(x, y, '?', libtcod.yellow, 'Lightning Scroll', render_order=RenderOrder.ITEM,
                                   item=item_component)
 
                 entities.append(item)
